@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Verificación de Certificados — Alcaldía de Caucasia</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: #f1f5f9;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 24px 16px;
+    }
+
+    /* ── Header ── */
+    .header {
+      width: 100%; max-width: 560px;
+      background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 60%, #1d4ed8 100%);
+      border-radius: 14px;
+      padding: 24px 28px;
+      color: white;
+      margin-bottom: 24px;
+      text-align: center;
+    }
+    .header h1 { font-size: 20px; font-weight: 800; letter-spacing: 0.5px; }
+    .header p  { font-size: 12px; color: #bfdbfe; margin-top: 4px; }
+
+    /* ── Card ── */
+    .card {
+      width: 100%; max-width: 560px;
+      background: white;
+      border-radius: 14px;
+      padding: 28px;
+      box-shadow: 0 2px 16px rgba(0,0,0,0.08);
+    }
+
+    label {
+      display: block;
+      font-size: 12px;
+      font-weight: 700;
+      color: #475569;
+      margin-bottom: 6px;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+
+    input {
+      width: 100%;
+      padding: 12px 14px;
+      font-size: 16px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      border: 2px solid #e2e8f0;
+      border-radius: 8px;
+      outline: none;
+      transition: border-color 0.2s;
+      text-transform: uppercase;
+    }
+    input:focus { border-color: #1d4ed8; background: #eff6ff; }
+
+    button {
+      margin-top: 14px;
+      width: 100%;
+      padding: 14px;
+      background: linear-gradient(135deg, #2563eb, #1d4ed8);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
+    button:hover   { opacity: 0.92; }
+    button:active  { opacity: 0.85; }
+    button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    /* ── Resultado ── */
+    #resultado { margin-top: 20px; display: none; border-radius: 10px; overflow: hidden; }
+
+    .res-header {
+      padding: 14px 18px;
+      font-size: 15px;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .res-body { padding: 16px 18px; }
+
+    .autentico .res-header { background: #ecfdf5; color: #065f46; }
+    .autentico .res-body   { background: #f0fdf4; border: 1px solid #bbf7d0; border-top: none; border-radius: 0 0 10px 10px; }
+
+    .invalido .res-header  { background: #fef2f2; color: #991b1b; }
+    .invalido .res-body    { background: #fff5f5; border: 1px solid #fecaca; border-top: none; border-radius: 0 0 10px 10px; }
+
+    .cargando .res-header  { background: #eff6ff; color: #1e3a8a; }
+    .cargando .res-body    { background: #f8fafc; border: 1px solid #bfdbfe; border-top: none; border-radius: 0 0 10px 10px; }
+
+    .campo {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      padding: 7px 0;
+      border-bottom: 1px solid #f1f5f9;
+      font-size: 14px;
+      gap: 10px;
+    }
+    .campo:last-child { border-bottom: none; }
+    .campo .lbl  { color: #64748b; font-weight: 600; white-space: nowrap; flex-shrink: 0; }
+    .campo .val  { color: #1e293b; font-weight: 700; text-align: right; }
+
+    .badge {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 700;
+    }
+    .badge-estrato { background: #dbeafe; color: #1e3a8a; }
+    .badge-tipo    { background: #fef9c3; color: #854d0e; }
+
+    /* ── Footer ── */
+    .footer {
+      margin-top: 24px;
+      font-size: 11px;
+      color: #94a3b8;
+      text-align: center;
+      max-width: 560px;
+    }
+
+    .spinner {
+      display: inline-block;
+      width: 18px; height: 18px;
+      border: 3px solid #bfdbfe;
+      border-top-color: #1d4ed8;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      vertical-align: middle;
+      margin-right: 6px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <h1>🏛️ ALCALDÍA DE CAUCASIA</h1>
+    <p>Sistema de Verificación de Certificados de Estratificación</p>
+  </div>
+
+  <div class="card">
+    <label for="codigo">Código del certificado</label>
+    <input
+      id="codigo"
+      type="text"
+      placeholder="CERT-XXXXXXXX"
+      autocomplete="off"
+      spellcheck="false"
+      maxlength="20"
+    />
+    <button id="btnVerificar" onclick="verificar()">🔍 Verificar autenticidad</button>
+
+    <div id="resultado"></div>
+  </div>
+
+  <div class="footer">
+    Este sistema consulta la base de datos oficial de la Alcaldía de Caucasia en tiempo real.<br>
+    Solo los certificados generados por el sistema oficial aparecerán como auténticos.
+  </div>
+
+  <script>
+    // ── Configuración Firebase (extraída del sistema de certificados) ──
+    const PROJECT_ID       = "generador-8b0f4";
+    const COLLECTION_PATH  = "artifacts/generador-8b0f4/public/data/history";
+    // Construir la URL de la API REST de Firestore
+    const FIRESTORE_URL = `https://firestore.googleapis.com/v1/projects/${PROJECT_ID}/databases/(default)/documents`;
+
+    // ── Leer código desde la URL (cuando viene del QR escaneado) ──
+    const params   = new URLSearchParams(window.location.search);
+    const codigoQR = params.get("c") || params.get("code") || params.get("cert") || params.get("q");
+    if (codigoQR) {
+      document.getElementById("codigo").value = codigoQR.trim().toUpperCase();
+      // Auto-verificar después de que cargue la página
+      window.addEventListener("load", () => setTimeout(verificar, 300));
+    }
+
+    // También permitir buscar al presionar Enter
+    document.getElementById("codigo").addEventListener("keydown", e => {
+      if (e.key === "Enter") verificar();
+    });
+
+    async function verificar() {
+      const input   = document.getElementById("codigo");
+      const codigo  = input.value.trim().toUpperCase();
+      const div     = document.getElementById("resultado");
+      const btn     = document.getElementById("btnVerificar");
+
+      if (!codigo || codigo.length < 4) {
+        input.focus();
+        return;
+      }
+
+      // Mostrar estado de carga
+      div.style.display = "block";
+      div.className = "";
+      div.innerHTML = `
+        <div class="cargando">
+          <div class="res-header"><span class="spinner"></span> Verificando...</div>
+          <div class="res-body" style="color:#64748b;font-size:13px;">
+            Consultando la base de datos oficial…
+          </div>
+        </div>`;
+      btn.disabled = true;
+
+      try {
+        // ── Buscar el documento por cert_code usando runQuery ──
+        const queryUrl = `${FIRESTORE_URL}:runQuery`;
+        const queryBody = {
+          structuredQuery: {
+            from: [{
+              // Colección: extraer solo el último segmento del path
+              collectionId: "history",
+              allDescendants: false
+            }],
+            where: {
+              fieldFilter: {
+                field:  { fieldPath: "cert_code" },
+                op:     "EQUAL",
+                value:  { stringValue: codigo }
+              }
+            },
+            limit: 1
+          }
+        };
+
+        const response = await fetch(queryUrl, {
+          method:  "POST",
+          headers: { "Content-Type": "application/json" },
+          body:    JSON.stringify(queryBody)
+        });
+
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const data = await response.json();
+
+        // ── Procesar resultado ──
+        if (data && data[0] && data[0].document) {
+          const f = data[0].document.fields;
+
+          // Extraer campos con manejo de tipos Firestore
+          const get = (key, fallback = "—") => {
+            const v = f[key];
+            if (!v) return fallback;
+            return v.stringValue || v.integerValue || v.booleanValue?.toString() || fallback;
+          };
+
+          const nombre     = get("Nombre");
+          const consecutivo= get("Consecutivo");
+          const estrato    = get("Estrato");
+          const direccion  = get("Dirección");
+          const barrio     = get("Barrio");
+          const doc_num    = get("Número");
+          const tipo_doc   = get("[Tipo de documento]", get("Hist_TipoID"));
+          const tipo_cert  = get("TipoCertificado") === "comercial" ? "Comercial" : "Residencial";
+          const fecha      = get("Fecha corta");
+          const generado   = get("generadoPorNombre");
+          const radicado   = get("Radicado", "Sin radicado");
+
+          div.innerHTML = `
+            <div class="autentico">
+              <div class="res-header">
+                ✅ Certificado AUTÉNTICO
+              </div>
+              <div class="res-body">
+                <div class="campo">
+                  <span class="lbl">Titular</span>
+                  <span class="val">${nombre}</span>
+                </div>
+                <div class="campo">
+                  <span class="lbl">Tipo de documento</span>
+                  <span class="val">${tipo_doc}: ${doc_num}</span>
+                </div>
+                <div class="campo">
+                  <span class="lbl">Dirección</span>
+                  <span class="val">${direccion}${barrio !== "—" ? ", " + barrio : ""}</span>
+                </div>
+                <div class="campo">
+                  <span class="lbl">Estrato</span>
+                  <span class="val">
+                    <span class="badge badge-estrato">Estrato ${estrato}</span>
+                  </span>
+                </div>
+                <div class="campo">
+                  <span class="lbl">Tipo de certificado</span>
+                  <span class="val">
+                    <span class="badge badge-tipo">${tipo_cert}</span>
+                  </span>
+                </div>
+                <div class="campo">
+                  <span class="lbl">Consecutivo</span>
+                  <span class="val">${consecutivo}</span>
+                </div>
+                <div class="campo">
+                  <span class="lbl">Fecha de emisión</span>
+                  <span class="val">${fecha}</span>
+                </div>
+                <div class="campo">
+                  <span class="lbl">Radicado</span>
+                  <span class="val">${radicado}</span>
+                </div>
+                <div class="campo">
+                  <span class="lbl">Emitido por</span>
+                  <span class="val">${generado}</span>
+                </div>
+                <div class="campo">
+                  <span class="lbl">Código de verificación</span>
+                  <span class="val" style="color:#1d4ed8;letter-spacing:1px;">${codigo}</span>
+                </div>
+              </div>
+            </div>`;
+
+        } else {
+          // No encontrado
+          div.innerHTML = `
+            <div class="invalido">
+              <div class="res-header">
+                ❌ Certificado NO encontrado
+              </div>
+              <div class="res-body" style="font-size:14px; color:#7f1d1d;">
+                El código <strong>${codigo}</strong> no corresponde a ningún certificado
+                emitido oficialmente por la Alcaldía de Caucasia.<br><br>
+                <span style="color:#64748b; font-size:12px;">
+                  Si cree que es un error, comuníquese con la Secretaría de Infraestructura
+                  y Valorización o con la dependencia que le entregó el documento.
+                </span>
+              </div>
+            </div>`;
+        }
+
+      } catch (err) {
+        div.innerHTML = `
+          <div class="invalido">
+            <div class="res-header">⚠️ Error de conexión</div>
+            <div class="res-body" style="font-size:13px; color:#64748b;">
+              No se pudo consultar la base de datos. Verifique su conexión a internet
+              e intente de nuevo.<br><br>
+              <small>Detalle técnico: ${err.message}</small>
+            </div>
+          </div>`;
+      } finally {
+        btn.disabled = false;
+      }
+    }
+  </script>
+</body>
+</html>
